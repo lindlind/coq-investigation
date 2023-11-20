@@ -32,15 +32,14 @@ repeat (case => //; move => ->).
 Qed.
 
 
-Lemma three_consecutive_someone_divides_by_2 : 
-        forall x, exists y, x = 2 * y \/ x + 1 = 2 * y \/ x + 2 = 2 * y. 
+Lemma two_consecutive_someone_divides_by_2 : 
+        forall x, exists y, x = 2 * y \/ x + 1 = 2 * y. 
 Proof.
 move => z; induction z.
 - exists 0. lia.
 - destruct IHz.
-  move : H; case; [ | case]; move => H.
+  destruct H as [H | H].
   + exists (x + 1); lia.
-  + exists x; lia.
   + exists x; lia.
 Qed.
 
@@ -50,48 +49,38 @@ Proof.
 move => z; induction z.
 - exists 0. lia.
 - destruct IHz.
-  move : H; case; [ | case]; move => H.
+  repeat destruct H as [H | H].
   + exists (x + 1); lia.
   + exists x; lia.
   + exists x; lia.
+Qed.
+
+Lemma odd_or_even: forall n, (exists k, n = 2 * k) \/ (exists k, n = 2 * k + 1). 
+Proof.
+induction n.
+- left. exists 0. lia.
+- destruct IHn as [[x H] | [x H]].
+  + right; exists x; lia.
+  + left; exists (x + 1); lia.
 Qed.
 
 Lemma divides_by_2_by_3_means_by_6 : 
         forall z p q, z = 2 * p -> z = 3 * q -> exists n, z = 6 * n. 
 Proof.
 move => a b c P Q.
-Search "odd_even".
-
-assert (either_odd_or_even: forall n, (exists k, n = 2 * k) \/ (exists k, n = 2 * k + 1)). 
-{
-induction n.
-constructor. exists 0. lia.
-case : IHn => H; destruct H. 
-constructor 2. exists x. lia.
-constructor 1. exists (x + 1). lia.
-}
-
-case : (either_odd_or_even c) => H.
-destruct H.
-exists x.
-lia.
-
-destruct H.
-rewrite H in Q.
-rewrite Q in P.
-move : (Mult.odd_even_lem_stt (3* x + 2) b); move => T.
-lia.
+destruct (odd_or_even c) as [[x H] | [x H]].
+- exists x; lia.
+- lia.
 Qed.
 
 Theorem three_consecutive_mult_divides_by_6 : forall x, exists y, x * (x + 1) * (x + 2) = 6 * y.
 Proof.
 move => x.
-move : (three_consecutive_someone_divides_by_2 x) (three_consecutive_someone_divides_by_3 x).
-move => [a Ha] [b Hb].
+destruct (two_consecutive_someone_divides_by_2 x) as [a Ha].
+destruct (three_consecutive_someone_divides_by_3 x) as [b Hb].
+destruct Ha as [Ha | Ha]; repeat destruct Hb as [Hb | Hb]. 
 
-move : Ha; case; [ | case]; move => Ha.
-all: move : Hb; case; [ | case]; move => Hb.
-all: try rewrite Ha Hb; try rewrite Hb Ha.
+all: try rewrite ! Ha Hb; try rewrite ! Hb Ha.
 
 all: cycle 1.
 exists (a * b * (2 * a + 2)); lia.
@@ -99,15 +88,10 @@ exists (a * b * (2 * a + 1)); lia.
 exists (a * b * (3 * b + 2)); lia.
 all: cycle 1.
 exists (a * b * x); lia.
-exists (a * b * (3 * b + 1)); lia.
-exists (a * b * x); lia.
-all: cycle 1.
 
-all: destruct (divides_by_2_by_3_means_by_6 Ha Hb).
-all: rewrite H; rename x0 into w.
+all: destruct (divides_by_2_by_3_means_by_6 Ha Hb) as [w H].
+all: rewrite {1} H.
 
-
-exists (w * (6 * w + 1) * (6 * w + 2)); lia.
+exists (w * (x + 1) * (x + 2)); lia.
 exists (w * x * (x + 2)); lia.
-exists (w * x * (x + 1)); lia.
 Qed.
