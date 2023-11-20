@@ -49,6 +49,32 @@ move => m n leq.
 elim : n m leq => [|n IHn] m.
 Abort.
 
+(* View "move /H" replaces top of the goal accordong to the "H".
+   If "H" is function, view apply the function to the top of the goal.
+   If "H" is equivalence, view apply it as a function in right 'direction'.
+ *)
+
+Goal forall A B C, (A -> B) -> (B -> C) -> (A -> C).
+Proof.
+move => A B C P Q.
+move => a; move : (P a).
+Undo.
+(* "move /P" apply P to A (same as "move => a; move : (P a)") *)
+move /P.
+done.
+Qed.
+
+Goal forall A B C, (A <-> B) -> (B <-> C) -> (A -> C).
+Proof.
+move => A B C P Q.
+(* fails because P is not a function *)
+try (move => a; move : (P a)).
+Undo.
+(* "move /P" apply P to A, turning into B by equivalence *)
+move /P /Q.
+done.
+Qed.
+
 
 (* "//" same as "try done." *)
 (* "/=" same as "simpl." *)
