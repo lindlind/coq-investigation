@@ -161,7 +161,6 @@ exists x2.
 split.
 by exists y2.
 
-
 assert (Hx: exists y : A, P x2 y) by (exists y2; done).
 apply (noOtherX1 x2) in Hx.
 
@@ -181,42 +180,31 @@ move => A P [y S] T.
 exact (S (T y)).
 Qed.
 
-Theorem ExistsUnique2 : ~ (forall (A: Type) (P: A -> A -> Prop), uniqueBothArgs P -> unique1stArg P /\ unique2ndArg P).
+Lemma destructImpl: forall A B C: Prop, A /\ (B -> C) -> ((A -> B) -> C).
 Proof.
-apply Counterexample.
-exists nat.
-apply Counterexample.
-exists (fun (x y : nat) => (0 = x) <-> (0 = y)).
-cut (uniqueBothArgs (fun x y : nat => (0 = x) <-> (0 = y))).
-move => H1 H2.
-apply H2 in H1; clear H2.
-destruct H1 as [A B].
-destruct A.
-destruct H.
-move : (H0 0) => H1.
-move : (H0 1) => H2.
-assert (T1: exists y : nat, (0 = 0) <-> (0 = y)) by (exists 0; lia).
-assert (T2: exists y : nat, (0 = 1) <-> (0 = y)) by (exists 1; lia).
-apply H1 in T1.
-apply H2 in T2.
-lia.
-
-exists 0.
-split.
-exists 0.
-split.
-+ done.
-+ move => x H.
-  rewrite -H.
-  done.
-move => x [y H].
-destruct H.
-induction y; induction x; try auto.
-+ assert (H2: (0 = x.+1) <-> (0 = x.+1)) by lia.
-  lia.
-+ assert (H2: (0 = x.+1) <-> (0 = y.+2)) by lia.
-  apply (H0 (y.+2)) in H2.
-  lia.
+move => A B C [a +] H; move : a H.
+by move => /[swap] /[apply] /[swap] /[apply].
 Qed.
 
-
+Theorem ExistsUnique2 : ~ (forall (A: Type) (P: A -> A -> Prop), uniqueBothArgs P -> unique1stArg P /\ unique2ndArg P).
+Proof.
+apply Counterexample; exists nat.
+apply Counterexample; exists (fun (x y : nat) => (0 = x) <-> (0 = y)).
+move: destructImpl; apply.
+split.
+  exists 0; split.
+    by exists 0; split => [ | _ <-].
+  move => x [y +].
+  elim: x => [ // | x ].
+  elim: y => [ | y ].
+    by move => _ [_ +] => /(_ x.+1); apply.
+  move=> _ _ [+ +].
+  move=> /[swap] /(_ y.+2).
+  move: destructImpl; apply.
+  split; by lia.
+move => [[x [_ H]] _].
+have: x = 0 /\ x = 1; last by lia.
+split.
+  by move: (H 0); apply; exists 0; lia.
+by move: (H 1); apply; exists 1; lia.
+Qed.
