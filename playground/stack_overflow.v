@@ -1,5 +1,5 @@
 (* SSReflect proof language requires these libraries to be loaded and options to be set. *)
-From Coq Require Import ssreflect ssrfun ssrbool.
+From mathcomp Require Import all_ssreflect.
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -80,3 +80,26 @@ by lia.
 Qed.
 
 End FixedProofs.
+
+Module AvoidLiaProofs.
+
+From mathcomp Require Import all_ssreflect.
+
+Lemma divides_by_2_by_3_means_by_6 : 
+  forall z p q, z = 2 * p -> z = 3 * q -> exists n, z = 6 * n. 
+Proof.
+have odd_or_even : forall n, (exists k, n = 2 * k) \/
+  (exists k, n = 2 * k + 1).
+  elim=> [ | n [[k kP] | [k kP]]]; first by left; exists 0.
+    by right; exists k; rewrite kP addn1.
+  by left; exists (k + 1); rewrite kP -addnS mulnDr muln1.
+move=> a b c + Q; move: (odd_or_even c) => [[x H] | [x H]].
+  by exists x; rewrite Q H mulnA; congr (_ * _).
+rewrite Q H => /eqP.
+have -> : 3 * (2 * x + 1) = 2 * (3 * x + 1) + 1.
+  by rewrite 2!mulnDr !mulnA mulnC -addnA; congr (_ + _).
+have -> // : forall n m, (2 * n + 1 == 2 * m) = false.
+  by move=> n m; rewrite !mul2n addn1 eqn_leq leq_Sdouble ltn_double ltnNge andNb.
+Qed.
+
+End AvoidLiaProofs.
